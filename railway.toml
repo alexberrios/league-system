@@ -1,6 +1,5 @@
 [build]
-builder = "nixpacks"
-buildCommand = "npx prisma migrate deploy && npm run build"
+builder = "dockerfile"
 
 
 [deploy]
