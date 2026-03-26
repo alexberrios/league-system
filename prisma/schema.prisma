@@ -1,0 +1,85 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  superadmin
+  admin
+  admin_equipo
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  role      Role     @default(admin_equipo)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  leagueAdmins LeagueAdmin[]
+  teamAdmins   TeamAdmin[]
+  playerRecord Player?
+}
+
+model League {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  leagueAdmins LeagueAdmin[]
+  teams        Team[]
+}
+
+model LeagueAdmin {
+  id       String @id @default(cuid())
+  userId   String
+  leagueId String
+
+  user   User   @relation(fields: [userId], references: [id])
+  league League @relation(fields: [leagueId], references: [id])
+
+  @@unique([userId, leagueId])
+}
+
+model Team {
+  id        String   @id @default(cuid())
+  name      String
+  leagueId  String
+  createdAt DateTime @default(now())
+
+  league     League      @relation(fields: [leagueId], references: [id])
+  teamAdmins TeamAdmin[]
+  players    Player[]
+}
+
+model TeamAdmin {
+  id     String @id @default(cuid())
+  userId String
+  teamId String
+
+  user User @relation(fields: [userId], references: [id])
+  team Team @relation(fields: [teamId], references: [id])
+
+  @@unique([userId, teamId])
+}
+
+// Jugadores son datos del equipo; userId es opcional (solo admin_equipo que tambien juega)
+model Player {
+  id     String @id @default(cuid())
+  name   String
+  number Int?
+  teamId String
+  userId String? @unique  // vinculado a un User si el admin_equipo tambien juega
+
+  team Team  @relation(fields: [teamId], references: [id])
+  user User? @relation(fields: [userId], references: [id])
+}
